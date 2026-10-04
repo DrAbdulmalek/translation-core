@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "marathon-translation-core"
+version = "0.1.0"
+description = "Shared translation engine — registry, engines, quality metrics, TM/TMX, glossary"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = ["pyyaml>=6.0"]
+
+[project.optional-dependencies]
+google = ["deep-translator>=1.11"]
+deepl = ["requests>=2.31"]
+hf = ["transformers>=4.40", "torch>=2.2", "sentencepiece>=0.2"]
+quality = ["evaluate>=0.4"]
+tm = ["rapidfuzz>=3.6"]
+ab = ["scipy>=1.11"]
+all = ["deep-translator>=1.11", "requests>=2.31", "transformers>=4.40", "torch>=2.2", "sentencepiece>=0.2", "evaluate>=0.4", "rapidfuzz>=3.6", "scipy>=1.11"]
+dev = ["pytest>=8.0", "ruff>=0.6"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+translation_core = ["config/*.yaml"]
