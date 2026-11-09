@@ -17,6 +17,8 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
+from .policy import DEFAULT_TRANSLATION_POLICY, TranslationPolicy
+
 
 @dataclass
 class TranslationResult:
@@ -43,12 +45,14 @@ class BaseTranslator:
 class GoogleTranslator(BaseTranslator):
     """المحرك الأول — deep-translator (مجاني، بلا مفتاح)."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, policy: Optional[TranslationPolicy] = None, **kwargs):
         self.engine = "google"
+        self.policy = policy or DEFAULT_TRANSLATION_POLICY
 
     def translate(self, text: str, src: str = "auto", tgt: str = "ar") -> TranslationResult:
         if not text.strip():
             return TranslationResult("", self.engine, src, tgt)
+        self.policy.require_remote_allowed("Google")
         from deep_translator import GoogleTranslator as _DTGoogle
 
         source = src if src and src != "auto" else "auto"
@@ -78,8 +82,9 @@ class GoogleTranslator(BaseTranslator):
 class DeepLTranslator(BaseTranslator):
     """المحرك الثاني — DeepL API (يتطلب DEEPL_API_KEY)."""
 
-    def __init__(self, api_key: Optional[str] = None, **kwargs):
+    def __init__(self, api_key: Optional[str] = None, policy: Optional[TranslationPolicy] = None, **kwargs):
         self.engine = "deepl"
+        self.policy = policy or DEFAULT_TRANSLATION_POLICY
         self.api_key = api_key or os.getenv("DEEPL_API_KEY", "")
         if not self.api_key:
             logger.warning("DEEPL_API_KEY غير مضبوط — سي فشل الاستدعاء")
@@ -87,6 +92,7 @@ class DeepLTranslator(BaseTranslator):
     def translate(self, text: str, src: str = "auto", tgt: str = "ar") -> TranslationResult:
         if not text.strip():
             return TranslationResult("", self.engine, src, tgt)
+        self.policy.require_remote_allowed("DeepL")
         import requests
 
         source = None if (not src or src == "auto") else src.upper()
@@ -283,12 +289,15 @@ _ENGINES = {
 class Translator:
     """واجهة موحدة تختار المحرك بالاسم."""
 
-    def __init__(self, engine: str = "google", **kwargs):
+    def __init__(self, engine: str = "google", policy: Optional[TranslationPolicy] = None, **kwargs):
         if engine not in _ENGINES:
             raise ValueError(
                 f"محرك غير معروف: {engine}. المتاح: {list(_ENGINES)}"
             )
-        self.impl = _ENGINES[engine](**kwargs)
+        if engine in ("google", "deepl"):
+            self.impl = _ENGINES[engine](policy=policy or DEFAULT_TRANSLATION_POLICY, **kwargs)
+        else:
+            self.impl = _ENGINES[engine](**kwargs)
         self.engine = engine
 
     def translate(
@@ -315,8 +324,9 @@ from .languages import get_registry  # noqa: E402
 class MultiLangTranslator:
     """مترجم يدعم لغات متعددة عبر عدة محركات."""
 
-    def __init__(self, engine: str = "google", **kwargs):
+    def __init__(self, engine: str = "google", policy: Optional[TranslationPolicy] = None, **kwargs):
         self.engine = engine
+        self.policy = policy or DEFAULT_TRANSLATION_POLICY
         self.registry = get_registry()
         self._cache = {}   # cache للـ backends حسب اللغة
 
@@ -335,6 +345,8 @@ class MultiLangTranslator:
     def _get_backend(self, tgt: str):
         """نموذج/backend خاص بكل لغة هدف (لـ hf)."""
         if self.engine != "hf":
+            if self.engine in ("google", "deepl"):
+                return self.backend_cls(policy=self.policy)
             return self.backend_cls()
 
         if tgt in self._cache:
