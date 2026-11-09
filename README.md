@@ -34,6 +34,13 @@ pip install git+https://github.com/DrAbdulmalek/translation-core.git@v0.1.0
 - ما لا يُعرف يُحذَّر منه صراحةً ولا يُمرَّر بصمت (فشل مرئي > هراء صامت).
 - المباريات في الذاكرة تحمل `score` محسوبًا فعليًا؛ لا نقاط تُختلَق.
 
+## Privacy and outbound translation
+
+Google and DeepL are blocked by default. Remote processing requires an explicit
+`TranslationPolicy(mode="EXPLICIT_REMOTE", remote_authorized=True)`. See
+[`docs/TRANSLATION_PRIVACY_POLICY.md`](docs/TRANSLATION_PRIVACY_POLICY.md).
+This gate does not yet certify Hugging Face model loading as offline-safe.
+
 ## الترخيص
 
 MIT — انظر [LICENSE](LICENSE).
