@@ -12,6 +12,11 @@
 يُحذَّر منه صراحةً ولا يُمرَّر بصمت.
 """
 from .languages import LanguageRegistry, get_registry
+from .policy import (
+    DEFAULT_TRANSLATION_POLICY,
+    RemoteTranslationBlocked,
+    TranslationPolicy,
+)
 from .translator import (
     BaseTranslator,
     DeepLTranslator,
@@ -30,6 +35,7 @@ __version__ = "0.1.0"
 
 __all__ = [
     "LanguageRegistry", "get_registry",
+    "TranslationPolicy", "RemoteTranslationBlocked", "DEFAULT_TRANSLATION_POLICY",
     "BaseTranslator", "GoogleTranslator", "DeepLTranslator", "HFTranslator",
     "FinetunedTranslator", "Translator", "MultiLangTranslator",
     "TranslationResult",
